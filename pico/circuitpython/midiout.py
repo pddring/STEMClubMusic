@@ -23,6 +23,12 @@ TEXT_COLOR = 0xFFFF00
 
 buttonA = digitalio.DigitalInOut(board.GP12)
 buttonA.switch_to_input(pull=digitalio.Pull.UP)
+buttonB = digitalio.DigitalInOut(board.GP13)
+buttonB.switch_to_input(pull=digitalio.Pull.UP)
+buttonX = digitalio.DigitalInOut(board.GP14)
+buttonX.switch_to_input(pull=digitalio.Pull.UP)
+buttonY = digitalio.DigitalInOut(board.GP15)
+buttonY.switch_to_input(pull=digitalio.Pull.UP)
 
 # Release any resources currently in use for the displays
 displayio.release_displays()
@@ -80,24 +86,77 @@ text_group1 = displayio.Group(
 )
 text_group1.append(text_area1)  # Subgroup for text scaling
 
+midi_msg_area = label.Label(terminalio.FONT, text="Last MIDI msg:", color=TEXT_COLOR)
+midi_msg_width = midi_msg_area.bounding_box[2] * FONTSCALE
+midi_msg_group = displayio.Group(
+    scale=FONTSCALE,
+    x = 10,
+    y = display.height - 40
+)
+midi_msg_group.append(midi_msg_area)
+
+midi_details_area = label.Label(terminalio.FONT, text="CH: N: V:", color=TEXT_COLOR)
+midi_details_width = midi_msg_area.bounding_box[2] * FONTSCALE
+midi_details_group = displayio.Group(
+    scale=FONTSCALE,
+    x = 10,
+    y = display.height - 20
+)
+midi_details_group.append(midi_details_area)
+
+
+
+
 splash.append(text_group)
 splash.append(text_group1)
-i = 0
+splash.append(midi_msg_group)
+splash.append(midi_details_group)
 
-midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], out_channel=0)
+midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1], midi_in = usb_midi.ports[0], out_channel=0)
 
 while True:
-    
+    msg = midi.receive()
+    if msg != None:
+        midi_msg_area.text=type(msg).__name__
+        try:
+            midi_details_area.text="Cha:{} Not:{} Vel:{}".format(msg.channel, msg.note, msg.velocity)
+        except:
+            midi_details_area.text = ""
+        
     
     if not buttonA.value:
-        text_area1.text = "Sending"
+        text_area1.text = "C2"
         midi.send(NoteOn("C2", 120))  # G sharp 2nd octave
         while not buttonA.value:
             time.sleep(0.1)
         midi.send(NoteOff("C2"))
         text_area1.text = ""
-    time.sleep(0.1)
-    i += 0.1
-    pass
-
+        
+    if not buttonB.value:
+        text_area1.text = "E2"
+        midi.send(NoteOn("E2", 120))  # G sharp 2nd octave
+        while not buttonB.value:
+            time.sleep(0.1)
+        midi.send(NoteOff("E2"))
+        text_area1.text = ""
+        
+    if not buttonX.value:
+        text_area1.text = "G2"
+        midi.send(NoteOn("G2", 120))  # G sharp 2nd octave
+        while not buttonX.value:
+            time.sleep(0.1)
+        midi.send(NoteOff("G2"))
+        text_area1.text = ""
+        
+    if not buttonY.value:
+        text_area1.text = "C3"
+        midi.send(NoteOn("C3", 120))  # G sharp 2nd octave
+        while not buttonY.value:
+            time.sleep(0.1)
+        midi.send(NoteOff("C3"))
+        text_area1.text = ""
+        
+    
+    #time.sleep(0.1)
+    #pass
 
